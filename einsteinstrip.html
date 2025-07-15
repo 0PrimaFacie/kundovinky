@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albert Einstein Comic Strip</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .comic-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .comic-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #e0e0e0;
+            padding: 10px;
+            text-align: center;
+        }
+        .comic-panel img {
+            width: 100%;
+            height: 200px; /* Fixed height for consistency */
+            object-fit: contain; /* Ensure the entire image is visible */
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .comic-caption {
+            font-size: 0.9em;
+            color: #555;
+            font-weight: bold;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .comic-panel img {
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="comic-container">
+        <div class="comic-panel">
+            <div class="loading-spinner" id="spinner1"></div>
+            <img id="image1" src="" alt="Albert Einstein on beach" class="hidden">
+            <p class="comic-caption">1) Albert Einstein lying on a beach, his skin pale.</p>
+        </div>
+        <div class="comic-panel">
+            <div class="loading-spinner" id="spinner2"></div>
+            <img id="image2" src="" alt="Albert Einstein swimming" class="hidden">
+            <p class="comic-caption">2) Albert Einstein swimming in the sea with "aha" like he has a great idea.</p>
+        </div>
+        <div class="comic-panel">
+            <div class="loading-spinner" id="spinner3"></div>
+            <img id="image3" src="" alt="Albert Einstein driving" class="hidden">
+            <p class="comic-caption">3) Sunburned Albert Einstein driving a car.</p>
+        </div>
+        <div class="comic-panel">
+            <div class="loading-spinner" id="spinner4"></div>
+            <img id="image4" src="" alt="Albert Einstein in office" class="hidden">
+            <p class="comic-caption">4) Dark brown skin Albert Einstein in his office next to a blackboard (he is holding chalk in one hand) with an equation K=FC^2 doing his tongue thing.</p>
+        </div>
+    </div>
+
+    <script>
+        async function generateImage(prompt, imageId, spinnerId) {
+            const spinner = document.getElementById(spinnerId);
+            const imageElement = document.getElementById(imageId);
+            spinner.classList.remove('hidden');
+            imageElement.classList.add('hidden');
+
+            const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1} };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    imageElement.src = imageUrl;
+                    imageElement.classList.remove('hidden');
+                } else {
+                    console.error('Image generation failed or returned no image data:', result);
+                    imageElement.src = `https://placehold.co/400x200/FF0000/FFFFFF?text=Error`;
+                    imageElement.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error generating image:', error);
+                imageElement.src = `https://placehold.co/400x200/FF0000/FFFFFF?text=Error`;
+                imageElement.classList.remove('hidden');
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        window.onload = async function() {
+            // Panel 1 – Pale: Einstein relaxes on his beach towel, skin still light.
+            await generateImage("Albert Einstein lying on a beach, his skin pale, no text bubbles, comic strip style", "image1", "spinner1");
+            // Panel 2 – Light Tan: In the water he has a subtle bronze glow and shouts “AHA!”
+            await generateImage("Albert Einstein swimming in the sea with a subtle bronze glow, shouting 'AHA!', no text bubbles, comic strip style", "image2", "spinner2");
+            // Panel 3 – Brown: Sun-roasted Einstein drives along the coast, noticeably darker.
+            await generateImage("Sun-roasted Albert Einstein driving a car along the coast, noticeably darker skin, no text bubbles, comic strip style", "image3", "spinner3");
+            // Panel 4 – Deep Brown: Back in the office, chalk in hand and tongue out beside K = FC².
+            await generateImage("Dark brown skin Albert Einstein in his office next to a blackboard (he is holding chalk in one hand) with an equation K=FC^2 doing his tongue thing, no text bubbles, comic strip style", "image4", "spinner4");
+        };
+    </script>
+</body>
+</html>
